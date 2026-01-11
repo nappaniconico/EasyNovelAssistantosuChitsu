@@ -1,0 +1,65 @@
+{
+    "AI拓也/urikuru-oss_V":{
+        "max_gpu_layer":33,
+        "context_size": 4096,
+        "urls":[
+            "https://huggingface.co/nappa114514/urikuru-oss/resolve/main/ver1/urikuru-oss_V.gguf"
+        ]
+    },
+    "AI拓也/urikuru-oss_L":{
+        "max_gpu_layer":41,
+        "context_size": 4096,
+        "urls":[
+            "https://huggingface.co/nappa114514/urikuru-oss/resolve/main/ver1/urikuru-oss_L.gguf"
+        ]
+    },
+    "AI拓也/urikuru-oss_S":{
+        "max_gpu_layer":33,
+        "context_size": 4096,
+        "urls":[
+            "https://huggingface.co/nappa114514/urikuru-oss/resolve/main/ver1/urikuru-oss_S.gguf"
+        ]
+    },
+    "AI拓也/majikuru-oss_V":{
+        "max_gpu_layer":33,
+        "context_size": 4096,
+        "urls":[
+            "https://huggingface.co/nappa114514/urikuru-oss/resolve/main/ver1/majikuru-oss_V.gguf"
+        ]
+    },
+    "AI拓也/majikuru-oss_L":{
+        "max_gpu_layer":41,
+        "context_size": 4096,
+        "urls":[
+            "https://huggingface.co/nappa114514/urikuru-oss/resolve/main/ver1/majikuru-oss_L.gguf"
+        ]
+    },
+    "AI拓也/majikuru-oss_S":{
+        "max_gpu_layer":33,
+        "context_size": 4096,
+        "urls":[
+            "https://huggingface.co/nappa114514/urikuru-oss/resolve/main/ver1/majikuru-oss_S.gguf"
+        ]
+    },
+    "AI拓也/osuchitsu-oss_V":{
+        "max_gpu_layer":33,
+        "context_size": 4096,
+        "urls":[
+            "https://huggingface.co/nappa114514/urikuru-oss/resolve/main/ver1/osu-oss_V.gguf"
+        ]
+    },
+    "AI拓也/osuchitsu-oss_L":{
+        "max_gpu_layer":41,
+        "context_size": 1024000,
+        "urls":[
+            "https://huggingface.co/nappa114514/urikuru-oss/resolve/main/ver1/osu-oss_L.gguf"
+        ]
+    },
+    "AI拓也/osuchitsu-oss_S":{
+        "max_gpu_layer":33,
+        "context_size": 32768,
+        "urls":[
+            "https://huggingface.co/nappa114514/urikuru-oss/resolve/main/ver1/osu-oss_S.gguf"
+        ]
+    }
+}
