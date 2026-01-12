@@ -152,7 +152,7 @@ def build_ui() -> gr.Blocks:
                             interactive=True
                         )
                             new_layer= backend.models[model_list[0]]["max_gpu_layer"]
-                            layers= gr.Slider(0, new_layer, value=new_layer, step=1, label="layers")
+                            layers= gr.Slider(0, new_layer, value=new_layer, step=1, label="layers",info="大きいほどGPUを重点的に使用します。ビデオメモリが小さい場合やCPUで生成したい場合は小さくしてください。")
                             
                         else:
                             model_choice = gr.Dropdown(
@@ -160,8 +160,8 @@ def build_ui() -> gr.Blocks:
                             label="モデル選択",
                             interactive=True
                         )
-                            layers = gr.Slider(0, 50, value=40, step=1, label="layers")
-                        context_length = gr.Slider(2048, 20480, value=2048, step=2048, label="context_length", interactive=True)
+                            layers = gr.Slider(0, 50, value=40, step=1, label="layers",info="大きいほどGPUを重点的に使用します。ビデオメモリが小さい場合やCPUで生成したい場合は小さくしてください。")
+                        context_length = gr.Slider(2048, 20480, value=2048, step=2048, label="context_length", interactive=True,info="LLMが参照できる文章量を指定します。長編や設定の細かい作品では大きくしてください。")
                         with gr.Row():
                             start_btn = gr.Button("起動",variant="primary")
                             stop_btn = gr.Button("終了",variant="stop")
@@ -331,8 +331,14 @@ def build_ui() -> gr.Blocks:
                 yield {status:"koboldcpp を外部で起動済みなら exe は空でOKです。base_url だけ合わせてください。"}
             # base_url のポートに合わせたいならここで parse してください（簡易に 5001 固定）
             try:
-                msg = backend.start(exe.strip(), model, layers=layers, port=5001,context_length=context_length)
-                def is_listening(host: str="127.0.0.1",port: int = 5001, timeout: float =0.3)-> bool:
+                port=5001
+                if not base_url.endswith("5001"):
+                    try:
+                        port=int(base_url.split(":")[-1])
+                    except Exception:
+                        port=5001
+                msg = backend.start(exe.strip(), model, layers=layers, port=port,context_length=context_length)
+                def is_listening(host: str="127.0.0.1",port: int = port, timeout: float =0.3)-> bool:
                     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                         s.settimeout(timeout)
                         return s.connect_ex((host, port)) == 0
@@ -356,7 +362,7 @@ def build_ui() -> gr.Blocks:
         
         def load_model_config(modelname):
             new_layer= backend.models[modelname]["max_gpu_layer"]
-            return gr.Slider(1, new_layer, value=new_layer, step=1, label="layers")
+            return gr.Slider(1, new_layer, value=new_layer, step=1, label="layers",info="大きいほどGPUを重点的に使用します。ビデオメモリが小さい場合やCPUで生成したい場合は小さくしてください。")
         
         def on_exit():
             """

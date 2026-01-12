@@ -1,6 +1,7 @@
 # Easy Novel Assistant osuChitsu  
 
-KoboldCpp を使って小説生成を行う Gradio アプリです。プロンプト補助、パラメータ調整、出力保存、ガタライズスクリプト編集を備えています。
+KoboldCpp を使って小説生成を行う Gradio アプリです。  
+特定のコミュニティ向けに調整されたLLMモデルを対象として作成されており、プロンプト補助、パラメータ調整、出力保存、ガタライズスクリプト編集を備えています。
 
 ## 動作環境
 - Windows 10/11
@@ -10,9 +11,13 @@ KoboldCpp を使って小説生成を行う Gradio アプリです。プロン�
 
 ## インストール  
 ### ワンステップインストール (おすすめ)  
-[onestep-install.bat](https://raw.githubusercontent.com/nappaniconico/EasyNovelAssistantosuChitsu/refs/heads/main/onestep-install.bat?v=1)を右クリックし`名前を付けて保存`でインストール先フォルダに保存してください。  
-続けて、保存した`onestep-install.bat`をダブルクリックして実行してください。  
-Python環境の構築やkoboldcpp.exeのダウンロードを自動的に行います。
+1. [onestep-install.bat](https://github.com/nappaniconico/EasyNovelAssistantosuChitsu/blob/main/onestep-install.bat?v=2) この青い文字をクリックしてください。  
+2. 開いたページの右側にある下矢印ボタンをクリックし、ファイルをダウンロードします。  
+  <img width="1920" height="946" alt="スクリーンショット 2026-01-12 224649" src="https://github.com/user-attachments/assets/ffa5b6c3-dac9-4f1a-9e42-a807a401b4e8" />
+
+3. 続けて、ダウンロードした`onestep-install.bat`をアプリを配置したいフォルダに移動します。  
+4. 最後に、移動先のフォルダで`onestep-install.bat`をクリックし、実行します。  
+これにより、Python環境の構築やkoboldcpp.exeのダウンロードを自動的に行います。  
 
 ### マニュアルインストール 
 自身でのPythonまたはuvのインストール、gitのインストールが可能な場合は以下のいずれかの手順でもインストール可能です。  
@@ -45,6 +50,10 @@ Python環境の構築やkoboldcpp.exeのダウンロードを自動的に行い�
 ----
 - モデルは `models/llm.json` に定義されています。未ダウンロードの場合は起動時に自動取得します。
 - 生成結果は「保存/終了」タブから txt/json で保存できます。
+- ガタライズスクリプトは特定の単語を別の単語に置き換えて出力する機能です
+- ベーシックなガタライズスクリプトの単語リストはgscript.jsonに定義されています。
+- 必要に応じてオリジナルの単語リストを作成し利用することも可能です。
+- 定期的に`update_all.bat`を実行してください。
 
 ## Lisence
 
