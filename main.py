@@ -331,8 +331,14 @@ def build_ui() -> gr.Blocks:
                 yield {status:"koboldcpp を外部で起動済みなら exe は空でOKです。base_url だけ合わせてください。"}
             # base_url のポートに合わせたいならここで parse してください（簡易に 5001 固定）
             try:
-                msg = backend.start(exe.strip(), model, layers=layers, port=5001,context_length=context_length)
-                def is_listening(host: str="127.0.0.1",port: int = 5001, timeout: float =0.3)-> bool:
+                port=5001
+                if not base_url.endswith("5001"):
+                    try:
+                        port=int(base_url.split(":")[-1])
+                    except Exception:
+                        port=5001
+                msg = backend.start(exe.strip(), model, layers=layers, port=port,context_length=context_length)
+                def is_listening(host: str="127.0.0.1",port: int = port, timeout: float =0.3)-> bool:
                     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                         s.settimeout(timeout)
                         return s.connect_ex((host, port)) == 0
