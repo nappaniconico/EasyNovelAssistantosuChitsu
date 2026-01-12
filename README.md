@@ -10,9 +10,11 @@ KoboldCpp を使って小説生成を行う Gradio アプリです。プロン�
 
 ## インストール  
 ### ワンステップインストール (おすすめ)  
-[onestep-install.bat](https://raw.githubusercontent.com/nappaniconico/EasyNovelAssistantosuChitsu/refs/heads/main/onestep-install.bat?v=1)を右クリックし`名前を付けて保存`でインストール先フォルダに保存してください。  
-続けて、保存した`onestep-install.bat`をダブルクリックして実行してください。  
-Python環境の構築やkoboldcpp.exeのダウンロードを自動的に行います。
+[onestep-install.bat](https://github.com/nappaniconico/EasyNovelAssistantosuChitsu/blob/main/onestep-install.bat?v=2) この青い文字をクリックしてください。  
+開いたページの右側にある下矢印ボタンをクリックし、ファイルをダウンロードします。
+続けて、ダウンロードした`onestep-install.bat`をアプリを配置したいフォルダに移動します。  
+最後に、移動先のフォルダで`onestep-install.bat`をクリックし、実行します。
+これにより、Python環境の構築やkoboldcpp.exeのダウンロードを自動的に行います。
 
 ### マニュアルインストール 
 自身でのPythonまたはuvのインストール、gitのインストールが可能な場合は以下のいずれかの手順でもインストール可能です。  

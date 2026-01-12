@@ -152,7 +152,7 @@ def build_ui() -> gr.Blocks:
                             interactive=True
                         )
                             new_layer= backend.models[model_list[0]]["max_gpu_layer"]
-                            layers= gr.Slider(0, new_layer, value=new_layer, step=1, label="layers")
+                            layers= gr.Slider(0, new_layer, value=new_layer, step=1, label="layers",info="大きいほどGPUを重点的に使用します。ビデオメモリが小さい場合やCPUで生成したい場合は小さくしてください。")
                             
                         else:
                             model_choice = gr.Dropdown(
@@ -160,8 +160,8 @@ def build_ui() -> gr.Blocks:
                             label="モデル選択",
                             interactive=True
                         )
-                            layers = gr.Slider(0, 50, value=40, step=1, label="layers")
-                        context_length = gr.Slider(2048, 20480, value=2048, step=2048, label="context_length", interactive=True)
+                            layers = gr.Slider(0, 50, value=40, step=1, label="layers",info="大きいほどGPUを重点的に使用します。ビデオメモリが小さい場合やCPUで生成したい場合は小さくしてください。")
+                        context_length = gr.Slider(2048, 20480, value=2048, step=2048, label="context_length", interactive=True,info="LLMが参照できる文章量を指定します。長編や設定の細かい作品では大きくしてください。")
                         with gr.Row():
                             start_btn = gr.Button("起動",variant="primary")
                             stop_btn = gr.Button("終了",variant="stop")
@@ -356,7 +356,7 @@ def build_ui() -> gr.Blocks:
         
         def load_model_config(modelname):
             new_layer= backend.models[modelname]["max_gpu_layer"]
-            return gr.Slider(1, new_layer, value=new_layer, step=1, label="layers")
+            return gr.Slider(1, new_layer, value=new_layer, step=1, label="layers",info="大きいほどGPUを重点的に使用します。ビデオメモリが小さい場合やCPUで生成したい場合は小さくしてください。")
         
         def on_exit():
             """
