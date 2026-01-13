@@ -161,7 +161,7 @@ def build_ui() -> gr.Blocks:
                             interactive=True
                         )
                             layers = gr.Slider(0, 50, value=40, step=1, label="layers",info="大きいほどGPUを重点的に使用します。ビデオメモリが小さい場合やCPUで生成したい場合は小さくしてください。")
-                        context_length = gr.Slider(2048, 20480, value=2048, step=2048, label="context_length", interactive=True,info="LLMが参照できる文章量を指定します。長編や設定の細かい作品では大きくしてください。")
+                        context_length = gr.Slider(2048, 20480, value=2048, step=2048, label="context_length", interactive=True,info="LLMが参照できる文章量を指定します。長編や設定の細かい作品では大きくしてください。ビデオメモリが小さい場合は小さくしてください。")
                         with gr.Row():
                             start_btn = gr.Button("起動",variant="primary")
                             stop_btn = gr.Button("終了",variant="stop")
@@ -195,7 +195,7 @@ def build_ui() -> gr.Blocks:
                 free_instr = gr.Textbox(
                     label="自由指示文",
                     lines=10,
-                    placeholder="今後の展開などを入力",
+                    placeholder="LLMへの指示を入力",
                     max_lines=10
                 )
 
