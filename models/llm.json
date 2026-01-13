@@ -61,5 +61,26 @@
         "urls":[
             "https://huggingface.co/nappa114514/urikuru-oss/resolve/main/ver1/osu-oss_S.gguf"
         ]
-    }
+    },
+    "一般向け/Shadows-MoE-Q6": {
+		"max_gpu_layer": 33,
+		"context_size": 32768,
+		"urls": [
+			"https://huggingface.co/Local-Novel-LLM-project/Shadows-MoE-GGUF/resolve/main/Shadows-MoE-Q6.gguf"
+		]
+	},
+	"一般向け/Vecteus-v1-IQ4_XS": {
+		"max_gpu_layer": 33,
+		"context_size": 4096,
+		"urls": [
+			"https://huggingface.co/mmnga/Vecteus-v1-gguf/resolve/main/Vecteus-v1-IQ4_XS.gguf"
+		]
+	},
+	"一般向け/LightChatAssistant-TypeB-2x7B-IQ4_XS": {
+		"max_gpu_layer": 33,
+		"context_size": 32768,
+		"urls": [
+			"https://huggingface.co/Sdff-Ltba/LightChatAssistant-TypeB-2x7B-GGUF/resolve/main/LightChatAssistant-TypeB-2x7B_iq4xs_imatrix.gguf"
+		]
+	}
 }
