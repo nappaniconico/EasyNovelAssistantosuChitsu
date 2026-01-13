@@ -294,7 +294,7 @@ def build_ui() -> gr.Blocks:
             on_retry_stream,
             inputs=[
                 output_display,
-                characters, title, genre,background,additional, free_instr,
+                title, genre, characters, background,additional, free_instr,
                 temperature, top_k, top_p, repeat_penalty, max_new_tokens,
                 doc_state,replace_token,gscripts_state
             ],
