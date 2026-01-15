@@ -434,7 +434,10 @@ def build_ui() -> gr.Blocks:
                 with open(path,mode="r",encoding="utf-8")as f:
                     datas=json.load(f)
                     param=datas["params"]
-                    kobo=datas["koboldcpp"]
+                    if "llamacpp" in datas:
+                        kobo=datas["llamacpp"]
+                    else:
+                        kobo=datas["koboldcpp"]
                     dolist=datas["dolist"]
                     return datas["main"],datas["title"],datas["genre"],datas["characters"],datas["background"],datas["add"],datas["inst"],\
                         param["temp"],param["top_k"],param["top_p"],param["repeat"],param["tokens"],kobo["modelname"],kobo["layers"],\
