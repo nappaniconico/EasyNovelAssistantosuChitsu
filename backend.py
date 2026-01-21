@@ -8,6 +8,7 @@ import threading
 import signal
 import requests
 from cipher import SimpleStringCipher
+from chat_template import Chat_templates
 
 # =========================
 # KoboldCpp backend class
@@ -27,6 +28,7 @@ class KoboldCppBackend:
     """
 
     def __init__(self, config: KoboldCppConfig):
+        self.temps=Chat_templates()
         self.config = config
         self._proc: Optional[subprocess.Popen] = None
         self.not_first_gen=False
@@ -64,6 +66,12 @@ class KoboldCppBackend:
     def _post_json(self, path: str, payload: Dict[str, Any]) -> Dict[str, Any]:
         url = self.config.base_url.rstrip("/") + path
         r = requests.post(url, json=payload, timeout=self.config.timeout_sec)
+        r.raise_for_status()
+        return r.json()
+    
+    def _get_none(self,path: str):
+        url = self.config.base_url.rstrip("/") + path
+        r = requests.get(url, timeout=self.config.timeout_sec)
         r.raise_for_status()
         return r.json()
 
@@ -137,8 +145,15 @@ class KoboldCppBackend:
         2) 生成中に /api/extra/generate/check をポーリングして増分を yield
         3) 生成スレッド終了でループ終了（リトライが詰まらない）
         """
+        modelname=self._get_none("/api/v1/model")["result"]
+        print(modelname)
+        template=self.temps.templates["chatml"]
+        for temp in self.temps.temp_name.keys():
+            if temp in modelname:
+                template=self.temps.templates[self.temps.temp_name[temp]]
+
         payload = {
-            "prompt": prompt,
+            "prompt": template.format(prompt),
             "temperature": float(params.get("temperature", 0.7)),
             "top_k": int(params.get("top_k", 40)),
             "top_p": float(params.get("top_p", 0.95)),
