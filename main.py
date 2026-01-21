@@ -10,6 +10,8 @@ import signal
 import pathlib
 import sys
 import random
+import subprocess
+import re
 
 import gradio as gr
 
@@ -60,25 +62,41 @@ def _build_prompt(title: str, genre: str, characters: str, background: str, addi
     parts = []
     
     if free_instr.strip():
-        parts.append(f"【指示】\n【{free_instr.strip()}】")
-    if title.strip():
-        parts.append(f"【タイトル】\n【{title.strip()}】")
-    if genre.strip():
-        parts.append(f"【ジャンル】\n【{genre.strip()}】")  
-    if characters.strip():
-        parts.append(f"【登場人物】\n{characters.strip()}")  
-    if background.strip():
-        parts.append(f"【舞台背景】\n{background.strip()}")  
-    if current_text.strip():
-        parts.append(f"【本文】\n{current_text.strip()}")
-    if not current_text.strip():
-        parts.append("【本文】\n")
-    if additional.strip():
-        parts.append(f"【{additional.strip()}】")
-    
+        parts.append(f"/【指示】/{free_instr.strip()}\n")
+    else:
+        parts.append("/【指示】/特になし\n")
 
-    #parts.append("【本文】\n")
-    return "\n\n".join(parts)
+    if title.strip():
+        parts.append(f"/【タイトル】/{title.strip()}\n")
+    else:
+        parts.append("/【タイトル】/特になし\n")
+
+    if genre.strip():
+        parts.append(f"/【ジャンル】/{genre.strip()}\n")  
+    else:
+        parts.append("/【ジャンル】/特になし\n")  
+
+    if characters.strip():
+        parts.append(f"/【登場人物】/\n{characters.strip()}")  
+    else:
+        parts.append("/【登場人物】/\n特になし")  
+
+    if background.strip():
+        parts.append(f"/【舞台背景】/\n{background.strip()}") 
+    else:
+        parts.append("/【舞台背景】/\n特になし") 
+
+    if additional.strip():
+        parts.append(f"/【{additional.strip()}】/")
+    else:
+        parts.append("/【特になし】/")
+
+    if current_text.strip():
+        parts.append(f"/【本文】/\n{current_text.strip()}")
+    else:
+        parts.append("/【本文】/\n")
+    
+    return "\n".join(parts)
 
 
 # =========================
@@ -124,7 +142,7 @@ def build_ui() -> gr.Blocks:
                         with gr.Accordion("文章構成"):                      
                             title = gr.Textbox(label="タイトル", lines=2,max_lines=2)
                             genre = gr.Textbox(label="ジャンル", lines=2,max_lines=2)
-                            characters = gr.Textbox(label="登場人物", lines=4,max_lines=4)
+                            characters = gr.Textbox(label="登場人物", lines=4,max_lines=4,placeholder="例)\n名前\n○○\n特徴\n一人称は□□、職業は△△")
                             background=gr.Textbox(label="舞台背景", lines=4,max_lines=4)
                             additional = gr.Textbox(label="続きの展開", lines=4,max_lines=4)
                         with gr.Accordion("その他",open=False):
@@ -151,8 +169,9 @@ def build_ui() -> gr.Blocks:
                             label="モデル選択",
                             interactive=True
                         )
-                            new_layer= backend.models[model_list[0]]["max_gpu_layer"]
-                            layers= gr.Slider(0, new_layer, value=new_layer, step=1, label="layers",info="大きいほどGPUを重点的に使用します。ビデオメモリが小さい場合やCPUで生成したい場合は小さくしてください。")
+                            gr.Markdown("以下のパラメータは使用するPCのビデオメモリ、メインメモリを確認しながら調整してください<br>許容値を超えた場合、起動に失敗することがあります")
+                            layers= backend.models[model_list[0]]["max_gpu_layer"]
+                            layers= gr.Slider(0, layers, value=layers, step=1, label="layers",info="大きいほどGPUを重点的に使用します。\nビデオメモリが小さい場合は小さくしてください。\nCPU生成の場合は0にしてください。")
                             
                         else:
                             model_choice = gr.Dropdown(
@@ -160,8 +179,9 @@ def build_ui() -> gr.Blocks:
                             label="モデル選択",
                             interactive=True
                         )
-                            layers = gr.Slider(0, 50, value=40, step=1, label="layers",info="大きいほどGPUを重点的に使用します。ビデオメモリが小さい場合やCPUで生成したい場合は小さくしてください。")
-                        context_length = gr.Slider(2048, 20480, value=2048, step=2048, label="context_length", interactive=True,info="LLMが参照できる文章量を指定します。長編や設定の細かい作品では大きくしてください。ビデオメモリが小さい場合は小さくしてください。")
+                            gr.Markdown("以下のパラメータは使用するPCのビデオメモリ、メインメモリを確認しながら調整してください<br>許容値を超えた場合、起動に失敗することがあります")
+                            layers = gr.Slider(0, 50, value=40, step=1, label="layers",info="大きいほどGPUを重点的に使用します。\nビデオメモリが小さい場合は小さくしてください。\nCPU生成の場合は0にしてください。")
+                        context_length = gr.Slider(2048, 20480, value=2048, step=2048, label="context_length", interactive=True,info="LLMが参照できる文章量を指定します。長編や設定の細かい作品では大きくしてください。\nビデオメモリが小さい場合は小さくしてください。")
                         with gr.Row():
                             start_btn = gr.Button("起動",variant="primary")
                             stop_btn = gr.Button("終了",variant="stop")
@@ -262,6 +282,9 @@ def build_ui() -> gr.Blocks:
                 "repeat_penalty": repeat_penalty,
                 "max_new_tokens": max_new_tokens,
             }
+
+            def tail_ereaser(text: str,keyword: str):
+                return re.sub(keyword,"",text)
         
             base = current_text
             acc = ""  # 生成済みを蓄積
@@ -277,6 +300,7 @@ def build_ui() -> gr.Blocks:
                         backend.not_first_gen=True
                         continue
                     acc += delta
+                    acc=tail_ereaser(acc,r'【.*?】')
                     yield {output_display:base+acc}
             except Exception as e:
                 yield acc + f"\n\n[ERROR] streaming failed: {e}\n"
@@ -508,13 +532,41 @@ def cleanup():
             if file.is_file():
                 file.unlink()
 
+def ensure_koboldcpp():
+    path="./koboldcpp.exe"
+    if os.name == "nt":
+        if os.path.exists(path):
+            return "koboldcpp は既に存在します"
+        url = "https://github.com/LostRuins/koboldcpp/releases/latest/download/koboldcpp.exe"
+
+        subprocess.run(["curl", "-fLo", "koboldcpp.exe", url], check=True)
+        os.chmod("koboldcpp", 0o755)
+
+        return "koboldcpp.exe をダウンロードしました"
+    else:
+        # Linux/macOS
+        if os.path.exists(path):
+            return "koboldcpp は既に存在します"
+        url = "https://github.com/LostRuins/koboldcpp/releases/latest/download/koboldcpp-linux-x64"
+
+        subprocess.run(["curl", "-fLo", "koboldcpp", url], check=True)
+        os.chmod("koboldcpp", 0o755)
+
+        return "koboldcpp をダウンロードしました"
+
 def signal_handler(signum,frame)->None:
     sys.exit(1)
+
+def print_message(text: str):
+    print(text)
+    return None
 
 def main():
     signal.signal(signal.SIGTERM,signal_handler)
     try:
+        ensure_koboldcpp()
         demo = build_ui()
+        threading.Thread(target=print_message,args=("-"*80+"\nブラウザが自動的に開かない場合は以下のURLをCtrl+クリックしてください\n"+("-"*80),)).run()
         demo.launch(inbrowser=True)
     finally:
         cleanup()

@@ -18,7 +18,9 @@ class Gscript_editer:
     def add_gsc(self,key:str,values:str):
         if key.strip() and values.strip():
             value_list=values.split(",")
-            self.loaded.setdefault(key,value_list)
+            result=self.loaded.setdefault(key,value_list)
+            if result != value_list:
+                self.loaded[key]=self.loaded[key]+value_list
             return self.loaded
         else:
             return self.loaded
