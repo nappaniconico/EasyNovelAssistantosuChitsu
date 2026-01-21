@@ -169,7 +169,7 @@ def build_ui() -> gr.Blocks:
                             label="モデル選択",
                             interactive=True
                         )
-                            info = gr.Markdown("以下のパラメータは使用するPCのビデオメモリ、メインメモリを確認しながら調整してください<br>許容値を超えた場合、起動に失敗することがあります")
+                            gr.Markdown("以下のパラメータは使用するPCのビデオメモリ、メインメモリを確認しながら調整してください<br>許容値を超えた場合、起動に失敗することがあります")
                             layers= backend.models[model_list[0]]["max_gpu_layer"]
                             layers= gr.Slider(0, layers, value=layers, step=1, label="layers",info="大きいほどGPUを重点的に使用します。\nビデオメモリが小さい場合は小さくしてください。\nCPU生成の場合は0にしてください。")
                             
@@ -179,7 +179,7 @@ def build_ui() -> gr.Blocks:
                             label="モデル選択",
                             interactive=True
                         )
-                            info = gr.Markdown("以下のパラメータは使用するPCのビデオメモリ、メインメモリを確認しながら調整してください<br>許容値を超えた場合、起動に失敗することがあります")
+                            gr.Markdown("以下のパラメータは使用するPCのビデオメモリ、メインメモリを確認しながら調整してください<br>許容値を超えた場合、起動に失敗することがあります")
                             layers = gr.Slider(0, 50, value=40, step=1, label="layers",info="大きいほどGPUを重点的に使用します。\nビデオメモリが小さい場合は小さくしてください。\nCPU生成の場合は0にしてください。")
                         context_length = gr.Slider(2048, 20480, value=2048, step=2048, label="context_length", interactive=True,info="LLMが参照できる文章量を指定します。長編や設定の細かい作品では大きくしてください。\nビデオメモリが小さい場合は小さくしてください。")
                         with gr.Row():
