@@ -62,6 +62,27 @@
             "https://huggingface.co/nappa114514/urikuru-oss/resolve/main/ver1/osu-oss_S.gguf"
         ]
     },
+    "AI拓也/osuchitsu-oss_V2":{
+        "max_gpu_layer":33,
+        "context_size": 524288,
+        "urls":[
+            "https://huggingface.co/nappa114514/urikuru-oss/resolve/main/ver2/osu-oss_V2.gguf"
+        ]
+    },
+    "AI拓也/osuchitsu-oss_M":{
+        "max_gpu_layer":41,
+        "context_size": 131072,
+        "urls":[
+            "https://huggingface.co/nappa114514/urikuru-oss/resolve/main/ver2/osu-oss_M.gguf"
+        ]
+    },
+    "AI拓也/osuchitsu-oss_Q":{
+        "max_gpu_layer":37,
+        "context_size": 40960,
+        "urls":[
+            "https://huggingface.co/nappa114514/urikuru-oss/resolve/main/ver2/osu-oss_Q.gguf"
+        ]
+    },
     "一般向け/Shadows-MoE-Q6": {
 		"max_gpu_layer": 33,
 		"context_size": 32768,
