@@ -159,7 +159,7 @@ def build_ui() -> gr.Blocks:
                         top_p = gr.Slider(0.01, 1.0, value=0.95, step=0.01, label="top_p", interactive=True,info="このパラメータが高いほどより多様な語彙を使用するようになります。")
                         repeat_penalty = gr.Slider(0, 2.0, value=1.1, step=0.1, label="repeat_penalty", interactive=True, info="このパラメータが高いほど同じ文章の繰り返しを抑制します。")                      
                         max_new_tokens = gr.Slider(64, 2048, value=512, step=32, label="max_new_tokens", interactive=True,info="1度に生成する文章量を決定します。")
-                        cut_mode=gr.Radio(["AI圧縮","シンプル","スパース"],label="context長圧縮方式",interactive=True,value="シンプル")
+                        cut_mode=gr.Radio(["AI圧縮","シンプル"],label="context長圧縮方式",interactive=True,value="シンプル")
                         
 
                     with gr.TabItem("KoboldCpp"):
@@ -173,7 +173,7 @@ def build_ui() -> gr.Blocks:
                         )
                             gr.Markdown("以下のパラメータは使用するPCのビデオメモリ、メインメモリを確認しながら調整してください<br>許容値を超えた場合、起動に失敗することがあります")
                             layers= backend.models[model_list[0]]["max_gpu_layer"]
-                            layers= gr.Slider(-1, layers, value=layers, step=1, label="layers",info="大きいほどGPUを重点的に使用します。\nビデオメモリが小さい場合は小さくしてください。\nCPU生成の場合は0にしてください。")
+                            layers= gr.Slider(-1, layers, value=-1, step=1, label="layers",info="大きいほどGPUを重点的に使用します。\nビデオメモリが小さい場合は小さくしてください。\nCPU生成の場合は0にしてください。")
                             
                         else:
                             model_choice = gr.Dropdown(
@@ -182,7 +182,7 @@ def build_ui() -> gr.Blocks:
                             interactive=True
                         )
                             gr.Markdown("以下のパラメータは使用するPCのビデオメモリ、メインメモリを確認しながら調整してください<br>許容値を超えた場合、起動に失敗することがあります")
-                            layers = gr.Slider(-1, 50, value=40, step=1, label="layers",info="大きいほどGPUを重点的に使用します。\nビデオメモリが小さい場合は小さくしてください。\nCPU生成の場合は0にしてください。")
+                            layers = gr.Slider(-1, 0, value=-1, step=1, label="layers",info="大きいほどGPUを重点的に使用します。\nビデオメモリが小さい場合は小さくしてください。\nCPU生成の場合は0にしてください。")
                         context_length = gr.Slider(2048, 20480, value=2048, step=2048, label="context_length", interactive=True,info="LLMが参照できる文章量を指定します。長編や設定の細かい作品では大きくしてください。\nビデオメモリが小さい場合は小さくしてください。")
                         with gr.Row():
                             start_btn = gr.Button("起動",variant="primary")
@@ -253,9 +253,13 @@ def build_ui() -> gr.Blocks:
         def on_change_base_url(new_url: str):
             backend.config.base_url = new_url
             return f"base_url を {new_url} に設定しました。"
+        
+        def on_change_kobold_path(new_path: str):
+            backend.config.kobold_path=new_path
+            return None
 
         base_url.change(on_change_base_url, inputs=[base_url], outputs=[status])
-
+        koboldcpp_exe.change(on_change_kobold_path,inputs=[koboldcpp_exe],outputs=[])
 
         def on_retry_stream(
             current_text: str,
@@ -272,7 +276,9 @@ def build_ui() -> gr.Blocks:
             max_new_tokens: int,
             before: str,
             replace:bool=False,
-            replacelist:dict={}
+            replacelist:dict={},
+            cut_mode: str="シンプル",
+            exepath="koboldcpp"
         ):
             # undo 用に、生成前を保存（redoはクリア）
             #undo_stack, redo_stack = _push_history(current_text, undo_stack, redo_stack)
@@ -295,7 +301,7 @@ def build_ui() -> gr.Blocks:
         
             try:
                 first=True
-                for delta in backend.generate_polled_stream(prompt, params,header,current_text):
+                for delta in backend.generate_polled_stream(prompt, params,header,current_text,cut_mode,exepath,max_new_tokens):
                     if first and base != "":
                         first=False
                         continue
@@ -305,6 +311,9 @@ def build_ui() -> gr.Blocks:
                         continue
                     acc += delta
                     acc=tail_ereaser(acc,r'【.*?】')
+                    if "Over Max Tokens" in acc:
+                        gr.Info("最大context長を超過しています。\ncontext長圧縮方式を「シンプル」に変更してください。")
+                        acc=tail_ereaser(acc,"Over Max Tokens")
                     yield {output_display:base+acc}
             except Exception as e:
                 yield acc + f"\n\n[ERROR] streaming failed: {e}\n"
@@ -319,14 +328,18 @@ def build_ui() -> gr.Blocks:
         
 
         retry_btn.click(_push_history,inputs=[output_display,undo_stack,redo_stack],outputs=[undo_stack,redo_stack]).then(
+            lambda x:gr.update(interactive=False),inputs=[output_display],outputs=[output_display]
+        ).then(
             on_retry_stream,
             inputs=[
                 output_display,
                 title, genre, characters, background,additional, free_instr,
                 temperature, top_k, top_p, repeat_penalty, max_new_tokens,
-                doc_state,replace_token,gscripts_state
+                doc_state,replace_token,gscripts_state,cut_mode, koboldcpp_exe
             ],
             outputs=[output_display],
+        ).then(
+            lambda x:gr.update(interactive=True),inputs=[output_display],outputs=[output_display]
         )
 
         def on_undo(current_text: str, undo_stack: List[str], redo_stack: List[str]):
@@ -393,7 +406,7 @@ def build_ui() -> gr.Blocks:
                 new_layer= backend.models[modelname]["max_gpu_layer"]
             else:
                 new_layer=0
-            return gr.Slider(-1, new_layer, value=new_layer, step=1, label="layers",info="大きいほどGPUを重点的に使用します。ビデオメモリが小さい場合やCPUで生成したい場合は小さくしてください。")
+            return gr.Slider(-1, new_layer, value=-1, step=1, label="layers",info="大きいほどGPUを重点的に使用します。ビデオメモリが小さい場合やCPUで生成したい場合は小さくしてください。")
         
         def on_exit():
             """
@@ -404,6 +417,7 @@ def build_ui() -> gr.Blocks:
             # 先に koboldcpp を止める（あなたの backend.stop() を使う）
             try:
                 backend.stop()
+                backend.stop_aicompesser()
             except Exception:
                 pass
             
