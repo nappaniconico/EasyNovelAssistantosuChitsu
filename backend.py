@@ -8,6 +8,7 @@ import threading
 import signal
 import requests
 import glob
+import socket
 from cipher import SimpleStringCipher
 from chat_template import Chat_templates
 
@@ -19,6 +20,7 @@ from chat_template import Chat_templates
 class KoboldCppConfig:
     base_url: str = "http://127.0.0.1:5001"
     timeout_sec: int = 180
+    kobold_path="koboldcpp"
 
 
 class KoboldCppBackend:
@@ -32,6 +34,7 @@ class KoboldCppBackend:
         self.temps=Chat_templates()
         self.config = config
         self._proc: Optional[subprocess.Popen] = None
+        self.comp_proc: Optional[subprocess.Popen] = None
         self.not_first_gen=False
         self.ssc=SimpleStringCipher("my-password")
         if os.path.exists("models/llm.json"):
@@ -149,7 +152,7 @@ class KoboldCppBackend:
                 return str(data["data"]["text"])
             return ""
 
-    def generate_polled_stream(self, prompt: str, params: Dict, header: str="", current_text: str="") -> Iterator[str]:
+    def generate_polled_stream(self, prompt: str, params: Dict, header: str="", current_text: str="",cut_mode: str="シンプル",exepath: str="koboldcpp",max_tokens: int=1024) -> Iterator[str]:
         """
         1) 別スレッドで /api/v1/generate を投げて生成開始（ブロッキング回避）
         2) 生成中に /api/extra/generate/check をポーリングして増分を yield
@@ -161,9 +164,15 @@ class KoboldCppBackend:
         for temp in self.temps.temp_name.keys():
             if temp in modelname:
                 template=self.temps.templates[self.temps.temp_name[temp]]
+        
+        formated=self.comp_hub(cut_mode,header,current_text,template,exepath,max_tokens)
+
+        
+        if self.check_over_tokens(formated)+max_tokens>0:
+            yield "Over Max Tokens"
 
         payload = {
-            "prompt": template.format(prompt),
+            "prompt": formated,
             "temperature": float(params.get("temperature", 0.7)),
             "top_k": int(params.get("top_k", 40)),
             "top_p": float(params.get("top_p", 0.95)),
@@ -300,7 +309,7 @@ class KoboldCppBackend:
 
 #コンテクスト長圧縮用処理
     def setting_aicompresser(self,exepath: str):
-        path="models\LFM2.5-1.2B-JP-Q4_K_M.gguf"
+        path="models\LFM2.5-1.2B-JP-Q8_0.gguf"
         def downloading(path:str,download_path:str):
             with requests.get(path,stream=True) as r:
                     r.raise_for_status()
@@ -312,18 +321,20 @@ class KoboldCppBackend:
         if os.path.exists(path):
             pass
         else:
-            result=threading.Thread(target=downloading,args=("https://huggingface.co/LiquidAI/LFM2.5-1.2B-JP-GGUF/resolve/main/LFM2.5-1.2B-JP-Q4_K_M.gguf?download=true",path,),daemon=True)
+            result=threading.Thread(target=downloading,args=("https://huggingface.co/LiquidAI/LFM2.5-1.2B-JP-GGUF/resolve/main/LFM2.5-1.2B-JP-Q8_0.gguf?download=true",path,),daemon=True)
             result.run()
-            result.join(timeout=180)
+            result.join(timeout=300)
         if self.comp_proc and self.comp_proc.poll() is None:
             return "すでに起動しています。"
+        if not os.path.exists(exepath+".exe"):
+            return f"{exepath}.exeが見つかりません"
 
         cmd = [
             exepath,
-            "--model", "models\LFM2.5-1.2B-JP-Q4_K_M.gguf",
-            "--port", 5015,
-            "--gpulayers", 0,
-            "--contextsize", 2048
+            "--model", "models\LFM2.5-1.2B-JP-Q8_0.gguf",
+            "--port", "5015",
+            "--gpulayers", "0",
+            "--contextsize", "2048"
         ]
         # 環境によって引数が違うので、必要ならここを調整してください
         self.comp_proc = subprocess.Popen(cmd,
@@ -354,13 +365,13 @@ class KoboldCppBackend:
         """
         # Kobold系の一般的な payload 名に寄せる
         payload = {
-            "prompt": text,
+            "prompt": "以下の文章を3文以内で要約してください。\n"+text,
             "temperature": 0.7,
             "top_k": 40,
             "top_p": 0.95,
             "rep_pen": 1.1,
             # Koboldは max_length / max_context_length などが混在しがち
-            "max_length": 1024,
+            "max_length": 256,
         }
 
         """
@@ -402,55 +413,49 @@ class KoboldCppBackend:
 
         raise RuntimeError(f"生成APIに接続できませんでした。base_url={self.config.base_url} / err={last_err}")
     
-    def check_current_tokens(self,text: str):
+    def check_over_tokens(self,text: str):
+        """
+        最大コンテクスト長に対する入力プロンプトの超過量を計算
+        
+        :param self: 説明
+        :param text: 説明
+        :type text: str
+        """
         token_values=int(self._post_json("/api/extra/tokencount",{"prompt":text})["value"])
         true_max_context_length=int(self._get_none("/api/extra/true_max_context_length")["value"])
+        print(f"check current token {token_values}/{true_max_context_length}")
         return token_values-true_max_context_length
     
-    def simple_compresser(self,texts:list[str], header: str, template: str):
-        over=True
-        while over:
-            new_texts=template.format(header + "\n".join(texts))
-            length=self.check_current_tokens(new_texts)
-            if length>100:
-                texts=texts[length//10:]
-            elif length>10:
-                texts=texts[2:]
-            elif length>0:
-                texts=texts[1:]
-            else:
-                over=False
-        return "\n".join(texts)
+    def check_current_token(self,text: str):
+        return int(self._post_json("/api/extra/tokencount",{"prompt":text})["value"])
     
-    def sparse_compesser(self,texts:list[str], header: str, template: str):
+    def simple_compresser(self,texts:list[str], header: str, template: str, max_tokens: int):
         over=True
-        current_index=0
+        formated=template.format(header + "\n".join(texts))
+        over_length=self.check_over_tokens(formated)+max_tokens
+        current_length=self.check_current_token("\n".join(texts))
+        first_sentence=int(len(texts)*over_length/current_length)
         while over:
-            new_texts=template.format(header + "\n".join(texts))
-            length=self.check_current_tokens(new_texts)
-            if length>100:
-                for i in range(0,length//10,2):
-                    texts[i+current_index]=""
-                current_index+=length//10
-            elif length>10:
-                for i in range(0,5,2):
-                    texts[i+current_index]=""
-                current_index+=4
-            elif length>0:
-                for i in range(0,3,2):
-                    texts[i+current_index]=""
-                current_index+=2
-            else:
+            new_texts=texts[first_sentence:]
+            if self.check_over_tokens(template.format(header + "\n".join(new_texts)))+max_tokens<0:
                 over=False
-        return "\n".join(texts)
+            else:
+                first_sentence+=1
+        return "\n".join(new_texts)
     
-    def ai_comresser(self,texts:list[str], header: str, template: str, exepath: str):
+    def ai_compresser(self,texts:list[str], header: str, template: str, max_tokens: int):
         n = 20
         chunks = [texts[i:i + n] for i in range(0, len(texts), n)]
         if self.comp_proc and self.comp_proc.poll() is None:
             pass
         else:
-            self.setting_aicompresser(exepath=exepath)
+            print(self.setting_aicompresser(exepath=self.config.kobold_path))
+            def is_listening(host: str="127.0.0.1",port: int = 5015, timeout: float =0.3)-> bool:
+                    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                        s.settimeout(timeout)
+                        return s.connect_ex((host, port)) == 0
+            while not is_listening():
+                time.sleep(0.1)
         over=True
         current_index=0
         comped_chunks=[]
@@ -461,25 +466,33 @@ class KoboldCppBackend:
                 new_raw_text+=item
             for item in chunks[len(comped_chunks):]:
                 new_raw_text+="\n".join(item)
-            new_texts=template.format(header + "\n".join(texts))
-            length=self.check_current_tokens(new_texts)
-            if length<0:
+            new_texts=template.format(header + new_raw_text)
+            length=self.check_over_tokens(new_texts)
+            if length+max_tokens<0:
                 over=False
             current_index+=1
-        return None
+        return new_raw_text
     
-    def comp_hub(self,mode: str,header: str, current_text:str, template: str,exepath: str):  
+    def comp_hub(self,mode: str,header: str, current_text:str, template: str,exepath: str, max_tokens: int):  
         formatted=template.format(header+current_text)
-        if self.check_current_tokens(formatted)<0:
+        if self.check_over_tokens(formatted)+max_tokens<0:
             return formatted
         texts=current_text.split("\n")
-        match mode:
-            case "シンプル":
-                result=self.simple_compresser(texts,header,template)
-            case "スパース":
-                result=self.sparse_compesser(texts,header,template)
-            case "AI圧縮":
-                result=self.ai_comresser(texts,header,template,exepath)
+        print(mode)
+        mode_dict={
+            "シンプル":1,
+            "AI圧縮":2
+        }
+        match mode_dict[mode]:
+            case 1:
+                print(1)
+                self.stop_aicompesser()
+                result=self.simple_compresser(texts,header,template,max_tokens)
+            case 2:
+                print(2)
+                result=self.ai_compresser(texts,header,template,max_tokens)
             case _:
                 result=""
-        return "\n".join([header,result])
+                print(3)
+        print(result)
+        return template.format(header+result)
