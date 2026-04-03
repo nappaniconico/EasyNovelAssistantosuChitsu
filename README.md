@@ -47,6 +47,15 @@ KoboldCpp を使って小説生成を行う Gradio アプリです。
 3. 「KoboldCpp」タブで `koboldcpp.exe` のパスを指定して「起動」します。外部で起動済みの場合は `base_url` を合わせて「起動」します。
 4. 「リトライ」を押して生成します。出力は左のテキストボックスに表示されます。
 
+使用可能なモデル    
+--------------  
+本アプリでは、特定のコミュニティ向けに追加学習を行ったモデル及び一般用途向けの日本語モデルを使用できます。  
+特定コミュニティ向けモデルは以下のページより確認できます。  
+[urikuru-oss](https://huggingface.co/nappa114514/urikuru-oss)  
+ベースモデルの種類などにより複数の選択肢があるため、性能や利用環境に適したものを選択してください。  
+なお、より新しいモデルを使用する場合koboldcppの更新が必要になることがあります。  
+その場合は`setup/download_koboldcpp.bat`を実行するか、[このURL](https://github.com/LostRuins/koboldcpp/releases/latest/download/koboldcpp.exe)からダウンロードしたものをこのフォルダにペーストしてください。 
+
 メモ
 ----
 - モデルは `models/llm.json` に定義されています。未ダウンロードの場合は起動時に自動取得します。
@@ -55,6 +64,8 @@ KoboldCpp を使って小説生成を行う Gradio アプリです。
 - ベーシックなガタライズスクリプトの単語リストはgscript.jsonに定義されています。
 - 必要に応じてオリジナルの単語リストを作成し利用することも可能です。
 - 定期的に`update_all.bat`を実行してください。
+- **LLMモデルによっては最新のkoboldcpp.exeを再ダウンロードする必要があります。**
+- [最新のkoboldcpp.exeダウンロードはこちら](https://github.com/LostRuins/koboldcpp/releases/latest/download/koboldcpp.exe)  
 
 ## Lisence
 

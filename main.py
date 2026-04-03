@@ -63,19 +63,19 @@ def _build_prompt(title: str, genre: str, characters: str, background: str, addi
     parts = []
     
     if free_instr.strip():
-        parts.append(f"/【指示】/{free_instr.strip()}\n")
+        parts.append(f"/【指示】/\n{free_instr.strip()}\n")
     else:
-        parts.append("/【指示】/特になし\n")
+        parts.append("/【指示】/\n以下の設定に従って文章の続きを生成せよ\n")
 
     if title.strip():
-        parts.append(f"/【タイトル】/{title.strip()}\n")
+        parts.append(f"/【タイトル】/\n{title.strip()}")
     else:
-        parts.append("/【タイトル】/特になし\n")
+        parts.append("/【タイトル】/\n特になし")
 
     if genre.strip():
-        parts.append(f"/【ジャンル】/{genre.strip()}\n")  
+        parts.append(f"/【ジャンル】/\n{genre.strip()}")  
     else:
-        parts.append("/【ジャンル】/特になし\n")  
+        parts.append("/【ジャンル】/\n特になし")  
 
     if characters.strip():
         parts.append(f"/【登場人物】/\n{characters.strip()}")  
@@ -88,9 +88,9 @@ def _build_prompt(title: str, genre: str, characters: str, background: str, addi
         parts.append("/【舞台背景】/\n特になし") 
 
     if additional.strip():
-        parts.append(f"/【{additional.strip()}】/")
+        parts.append(f"/【続きのストーリー展開】/\n{additional.strip()}")
     else:
-        parts.append("/【特になし】/")
+        parts.append("/【続きのストーリー展開】/\n自由に展開せよ")
 
     if current_text.strip():
         parts.append(f"/【本文】/\n{current_text.strip()}")
