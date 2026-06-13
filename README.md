@@ -10,6 +10,17 @@ KoboldCpp を使って小説生成を行う Gradio アプリです。
 - KoboldCpp（同梱の `koboldcpp.exe` か外部起動のどちらでも可）
 
 ## インストール  
+### ポータブル版(zip版)  
+Python や git のセットアップを行わずに利用したい場合は、Release ページからポータブル版の zip ファイルをダウンロードしてください。  
+
+1. Release ページから `EasyNovelAssistant-Portable.zip` をダウンロードします。
+2. zip ファイルを任意のフォルダに展開します。
+3. 展開したフォルダ内の `EasyNovelAssistant.exe` をクリックして起動します。
+4. しばらくすると自動的にブラウザが起動します。起動しない場合は [このリンク](http://127.0.0.1:7860) を開きます。
+
+初回起動時、必要な設定ファイルは自動で作成されます。モデルファイルが未ダウンロードの場合は、「KoboldCpp」タブでモデルを選んで「起動」すると `models` フォルダに自動取得されます。  
+ポータブル版ではアプリ内の更新機能は無効です。新しいバージョンを利用する場合は、Release ページから新しい zip ファイルをダウンロードしてください。  
+
 ### ワンステップインストール (おすすめ)  
 1. [onestep-install.bat](https://github.com/nappaniconico/EasyNovelAssistantosuChitsu/blob/main/onestep-install.bat?v=2) この青い文字をクリックしてください。  
 2. 開いたページの右側にある下矢印ボタンをクリックし、ファイルをダウンロードします。  
