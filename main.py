@@ -13,8 +13,32 @@ import sys
 import random
 import subprocess
 import re
+import shutil
 
 import gradio as gr
+
+
+def is_pyinstaller_bundle() -> bool:
+    return bool(getattr(sys, "frozen", False))
+
+
+def prepare_runtime_environment() -> None:
+    if is_pyinstaller_bundle():
+        app_dir = pathlib.Path(sys.executable).resolve().parent
+        bundled_dir = pathlib.Path(getattr(sys, "_MEIPASS", app_dir))
+    else:
+        app_dir = pathlib.Path(__file__).resolve().parent
+        bundled_dir = app_dir
+
+    os.chdir(app_dir)
+
+    for source, destination in [
+        (bundled_dir / "models" / "llm.json", app_dir / "models" / "llm.json"),
+        (bundled_dir / "gscript.json", app_dir / "gscript.json"),
+    ]:
+        if source.exists() and not destination.exists():
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, destination)
 
 
 
@@ -202,7 +226,7 @@ def build_ui() -> gr.Blocks:
                         uploadfile=gr.File(visible="hidden",interactive=True)
                         file_status=gr.Markdown("           下の青い文字を押してダウンロードしてください",visible="hidden")
                         downloadfile=gr.File(visible="hidden",interactive=False,show_label=False)
-                        update_button=gr.Button("アプリの更新",variant="secondary")                       
+                        update_button=gr.Button("アプリの更新",variant="secondary",visible=not is_pyinstaller_bundle())
                         exit_button=gr.Button("アプリ終了",variant="stop")
                     
                     with gr.TabItem("ガタライズスクリプト作成"):
@@ -543,7 +567,8 @@ def build_ui() -> gr.Blocks:
         stop_btn.click(on_stop, inputs=[], outputs=[status])
         model_choice.change(load_model_config,inputs=[model_choice],outputs=[layers])
         exit_button.click(on_exit,inputs=[],outputs=[output_display])
-        update_button.click(gic.update_enacchi,inputs=[],outputs=[git_state]).then(on_restart,inputs=[git_state,output_display],outputs=[output_display])
+        if not is_pyinstaller_bundle():
+            update_button.click(gic.update_enacchi,inputs=[],outputs=[git_state]).then(on_restart,inputs=[git_state,output_display],outputs=[output_display])
         extxt.click(export_txt,inputs=[output_display],outputs=[downloadfile]).then(lambda x:gr.update(visible=True),
                                                                         inputs=[file_status],outputs=[file_status]).then(lambda x:gr.update(visible=True),
                                                                                                                         inputs=[downloadfile],outputs=[downloadfile])
@@ -577,7 +602,6 @@ def ensure_koboldcpp():
         url = "https://github.com/LostRuins/koboldcpp/releases/latest/download/koboldcpp.exe"
 
         subprocess.run(["curl", "-fLo", "koboldcpp.exe", url], check=True)
-        os.chmod("koboldcpp", 0o755)
 
         return "koboldcpp.exe をダウンロードしました"
     else:
@@ -599,6 +623,7 @@ def print_message(text: str):
     return None
 
 def main():
+    prepare_runtime_environment()
     signal.signal(signal.SIGTERM,signal_handler)
     try:
         ensure_koboldcpp()
